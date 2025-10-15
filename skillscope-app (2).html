@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillScope - AI Skill Analyzer</title>
+    <style>
+        /* ===== GLOBAL STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: fixed;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            animation: float 20s infinite linear;
+            z-index: 0;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(50px, 50px) rotate(360deg); }
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+            padding: 45px;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            animation: fadeIn 0.6s ease-in;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== HEADER SECTION ===== */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.05em;
+            margin-bottom: 8px;
+        }
+
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .feature-badge {
+            background: #f0f4ff;
+            color: #667eea;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        /* ===== INPUT SECTION ===== */
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+            background: #fafafa;
+        }
+
+        .input-field:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        /* ===== BUTTON STYLES ===== */
+        .analyze-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .analyze-btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* ===== OUTPUT SECTION ===== */
+        .output-box {
+            margin-top: 35px;
+            display: none;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .output-box.show {
+            display: block;
+        }
+
+        /* Skill Header Card */
+        .skill-card {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid #667eea30;
+        }
+
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .skill-name {
+            color: #667eea;
+            font-size: 2em;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .skill-rating-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .skill-rating {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1.1em;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .rating-bar {
+            width: 200px;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .rating-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+
+        .skill-description {
+            color: #555;
+            line-height: 1.7;
+            font-size: 1.05em;
+        }
+
+        /* Salary Section */
+        .salary-section {
+            background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 6px 20px rgba(72, 198, 239, 0.3);
+        }
+
+        .salary-header {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .salary-range {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .salary-item {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            min-width: 140px;
+        }
+
+        .salary-label {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .salary-amount {
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        /* Jobs Section */
+        .jobs-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .job-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .job-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 18px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .job-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .job-title {
+            color: #333;
+            font-weight: 600;
+            font-size: 1.05em;
+            margin-bottom: 8px;
+        }
+
+        .job-demand {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .job-demand.high {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .job-demand.medium {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        /* Courses Section */
+        .courses-section {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .course-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .course-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .course-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+            gap: 15px;
+        }
+
+        .course-title {
+            color: #333;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        .course-platform {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .course-link {
+            display: inline-block;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-top: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .course-link:hover {
+            color: #764ba2;
+            transform: translateX(5px);
+        }
+
+        /* Upskill Section */
+        .upskill-section {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 25px;
+            border-radius: 16px;
+            border-left: 5px solid #ff6b6b;
+        }
+
+        .upskill-title {
+            color: #333;
+            font-weight: 700;
+            font-size: 1.2em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upskill-tip {
+            color: #333;
+            line-height: 1.7;
+            font-size: 1.05em;
+        }
+
+        /* Error Message */
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            border: 2px solid #ef5350;
+        }
+
+        /* Loading animation */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .skill-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .skill-rating-container {
+                align-items: flex-start;
+            }
+
+            .salary-range {
+                flex-direction: column;
+            }
+
+            .job-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 SkillScope</h1>
+            <p class="subtitle">AI-Powered Skill Mapping & Career Intelligence</p>
+            <div class="features">
+                <span class="feature-badge">📊 Salary Insights</span>
+                <span class="feature-badge">📚 Course Recommendations</span>
+                <span class="feature-badge">💼 Job Matching</span>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label class="input-label">Enter Your Skill</label>
+                <input 
+                    type="text" 
+                    id="skillInput" 
+                    class="input-field" 
+                    placeholder="e.g., tailor, electrician, carpenter, mechanic, plumber, cook, farmer"
+                    autocomplete="off"
+                >
+            </div>
+            <button class="analyze-btn" onclick="analyzeSkill()">
+                🚀 Analyze Skill & Get Recommendations
+            </button>
+        </div>
+
+        <div id="outputBox" class="output-box"></div>
+    </div>
+
+    <script>
+        const skillDatabase = {
+            tailor: {
+                description: "A tailor is a skilled professional who designs, alters, repairs, and creates custom clothing. This craft requires precision, creativity, and attention to detail, making it a valuable trade in the fashion industry.",
+                jobs: [
+                    { title: "Custom Clothing Designer", demand: "high" },
+                    { title: "Alterations Specialist", demand: "high" },
+                    { title: "Fashion House Tailor", demand: "medium" }
+                ],
+                salary: { entry: "₹15,000", mid: "₹25,000", senior: "₹45,000" },
+                courses: [
+                    { title: "Professional Tailoring & Fashion Design", platform: "Coursera", link: "https://www.coursera.org/courses?query=fashion%20design" },
+                    { title: "Pattern Making & Garment Construction", platform: "Udemy", link: "https://www.udemy.com/topic/sewing/" },
+                    { title: "Tailoring Skills Training", platform: "Skill India", link: "https://www.skillindiadigital.gov.in/" }
+                ],
+                upskillTip: "fashion design software (Adobe Illustrator, CLO 3D) and pattern making techniques"
+            },
+            carpenter: {
+                description: "A carpenter works with wood to construct, install, and repair structures and fixtures. This trade combines technical skills with creative problem-solving and is essential in construction and furniture industries.",
+                jobs: [
+                    { title: "Furniture Maker", demand: "high" },
+                    { title: "Construction Carpenter", demand: "high" },
+                    { title: "Cabinet Installer", demand: "medium" }
+                ],
+                salary: { entry: "₹18,000", mid: "₹30,000", senior: "₹55,000" },
+                courses: [
+                    { title: "Carpentry Fundamentals & Advanced Techniques", platform: "YouTube", link: "https://www.youtube.com/results?search_query=carpentry+course" },
+                    { title: "Woodworking & Furniture Design", platform: "Udemy", link: "https://www.udemy.com/topic/woodworking/" },
+                    { title: "Carpenter Training Program", platform: "NSDC", link: "https://nsdcindia.org/" }
+                ],
+                upskillTip: "CAD software (SketchUp, AutoCAD) and modern joinery techniques like CNC operation"
+            },
+            electrician: {
+                description: "An electrician installs, maintains, and repairs electrical systems in homes, businesses, and factories. This role requires technical knowledge, strict adherence to safety standards, and continuous learning as technology evolves.",
+                jobs: [
+                    { title: "Residential Electrician", demand: "high" },
+                    { title: "Industrial Electrical Technician", demand: "high" },
+                    { title: "Solar Panel Installer", demand: "high" }
+                ],
+                salary: { entry: "₹20,000", mid: "₹35,000", senior: "₹60,000" },
+                courses: [
+                    { title: "Electrical Installation & Safety", platform: "Coursera", link: "https://www.coursera.org/courses?query=electrical%20engineering" },
+                    { title: "Solar Energy Systems Installation", platform: "Udemy", link: "https://www.udemy.com/topic/solar-energy/" },
+                    { title: "ITI Electrician Course", platform: "Skill India", link: "https://www.skillindiadigital.gov.in/" }
+                ],
+                upskillTip: "renewable energy systems (solar, wind) and smart home automation technology"
+            },
+            mechanic: {
+                description: "A mechanic diagnoses, repairs, and maintains vehicles and machinery. This profession demands mechanical aptitude, problem-solving skills, and continuous learning as automotive technology rapidly evolves.",
+                jobs: [
+                    { title: "Automotive Technician", demand: "high" },
+                    { title: "Diesel Mechanic", demand: "high" },
+                    { title: "Aircraft Maintenance Engineer", demand: "medium" }
+                ],
+                salary: { entry: "₹18,000", mid: "₹32,000", senior: "₹58,000" },
+                courses: [
+                    { title: "Automotive Mechanics & Repair", platform: "Udemy", link: "https://www.udemy.com/topic/automotive-mechanics/" },
+                    { title: "Electric Vehicle Technology", platform: "Coursera", link: "https://www.coursera.org/courses?query=electric%20vehicles" },
+                    { title: "Motor Mechanic Training", platform: "NSDC", link: "https://nsdcindia.org/" }
+                ],
+                upskillTip: "electric vehicle (EV) technology and advanced diagnostic software tools"
+            },
+            plumber: {
+                description: "A plumber installs and repairs pipes, fixtures, and water systems in residential and commercial buildings. This essential trade ensures safe water supply, proper drainage, and is crucial for public health.",
+                jobs: [
+                    { title: "Residential Plumber", demand: "high" },
+                    { title: "Industrial Pipefitter", demand: "high" },
+                    { title: "HVAC Technician", demand: "medium" }
+                ],
+                salary: { entry: "₹17,000", mid: "₹28,000", senior: "₹50,000" },
+                courses: [
+                    { title: "Plumbing Basics & Advanced Systems", platform: "YouTube", link: "https://www.youtube.com/results?search_query=plumbing+course" },
+                    { title: "Water Conservation & Green Plumbing", platform: "Udemy", link: "https://www.udemy.com/topic/plumbing/" },
+                    { title: "Plumber Training Program", platform: "Skill India", link: "https://www.skillindiadigital.gov.in/" }
+                ],
+                upskillTip: "green plumbing technologies, water conservation systems, and HVAC integration"
+            },
+            cook: {
+                description: "A cook prepares, seasons, and cooks food in various settings from homes to restaurants. This skill combines creativity, culinary knowledge, and time management, with opportunities ranging from home-based catering to professional kitchens.",
+                jobs: [
+                    { title: "Restaurant Cook", demand: "high" },
+                    { title: "Home Catering Specialist", demand: "high" },
+                    { title: "Food Truck Operator", demand: "medium" }
+                ],
+                salary: { entry: "₹15,000", mid: "₹28,000", senior: "₹50,000" },
+                courses: [
+                    { title: "Professional Cooking Techniques", platform: "Coursera", link: "https://www.coursera.org/courses?query=culinary%20arts" },
+                    { title: "Food Safety & Hygiene Certification", platform: "Udemy", link: "https://www.udemy.com/topic/food-safety/" },
+                    { title: "Cooking Skills Training", platform: "YouTube", link: "https://www.youtube.com/results?search_query=professional+cooking+course" }
+                ],
+                upskillTip: "food presentation, international cuisines, and food business management"
+            },
+            farmer: {
+                description: "A farmer cultivates crops and raises livestock, playing a vital role in food production. Modern farming combines traditional knowledge with technology, requiring skills in crop management, equipment operation, and business planning.",
+                jobs: [
+                    { title: "Organic Farm Manager", demand: "high" },
+                    { title: "Agricultural Technician", demand: "high" },
+                    { title: "Contract Farming Specialist", demand: "medium" }
+                ],
+                salary: { entry: "₹12,000", mid: "₹25,000", senior: "₹45,000" },
+                courses: [
+                    { title: "Modern Farming Techniques", platform: "Coursera", link: "https://www.coursera.org/courses?query=agriculture" },
+                    { title: "Organic Farming & Sustainability", platform: "YouTube", link: "https://www.youtube.com/results?search_query=organic+farming+course" },
+                    { title: "Agricultural Training Program", platform: "Skill India", link: "https://www.skillindiadigital.gov.in/" }
+                ],
+                upskillTip: "precision agriculture, organic certification, and agri-business management"
+            }
+        };
+
+        function analyzeSkill() {
+            const input = document.getElementById('skillInput').value.trim().toLowerCase();
+            const outputBox = document.getElementById('outputBox');
+
+            if (!input) {
+                outputBox.innerHTML = '<p class="error-message">⚠️ Please enter a skill to analyze.</p>';
+                outputBox.classList.add('show');
+                return;
+            }
+
+            outputBox.innerHTML = '<div class="loading">Analyzing your skill</div>';
+            outputBox.classList.add('show');
+
+            setTimeout(() => {
+                let matchedSkill = null;
+                for (let skill in skillDatabase) {
+                    if (input.includes(skill) || skill.includes(input)) {
+                        matchedSkill = skill;
+                        break;
+                    }
+                }
+
+                if (matchedSkill) {
+                    displaySkillAnalysis(matchedSkill);
+                } else {
+                    displayNotFound();
+                }
+            }, 800);
+        }
+
+        function displaySkillAnalysis(skill) {
+            const data = skillDatabase[skill];
+            const outputBox = document.getElementById('outputBox');
+            const rating = Math.floor(Math.random() * 31) + 65;
+
+            const jobsHTML = data.jobs.map(job => `
+                <div class="job-card">
+                    <div class="job-title">${job.title}</div>
+                    <span class="job-demand ${job.demand}">
+                        ${job.demand === 'high' ? '🔥 High Demand' : '📊 Medium Demand'}
+                    </span>
+                </div>
+            `).join('');
+
+            const coursesHTML = data.courses.map(course => `
+                <div class="course-card">
+                    <div class="course-header">
+                        <div class="course-title">${course.title}</div>
+                        <span class="course-platform">${course.platform}</span>
+                    </div>
+                    <a href="${course.link}" target="_blank" class="course-link">View Course →</a>
+                </div>
+            `).join('');
+
+            outputBox.innerHTML = `
+                <div class="skill-card">
+                    <div class="skill-header">
+                        <h2 class="skill-name">${skill}</h2>
+                        <div class="skill-rating-container">
+                            <span class="skill-rating">${rating}/100</span>
+                            <div class="rating-bar">
+                                <div class="rating-fill" style="width: ${rating}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="skill-description">${data.description}</p>
+                </div>
+                <div class="salary-section">
+                    <div class="salary-header">💰 Expected Salary Range (Monthly)</div>
+                    <div class="salary-range">
+                        <div class="salary-item">
+                            <div class="salary-label">Entry Level</div>
+                            <div class="salary-amount">${data.salary.entry}</div>
+                        </div>
+                        <div class="salary-item">
+                            <div class="salary-label">Mid Level</div>
+                            <div class="salary-amount">${data.salary.mid}</div>
+                        </div>
+                        <div class="salary-item">
+                            <div class="salary-label">Senior Level</div>
+                            <div class="salary-amount">${data.salary.senior}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="jobs-section">
+                    <h3 class="section-title">💼 Recommended Job Roles</h3>
+                    <div class="job-grid">${jobsHTML}</div>
+                </div>
+                <div class="courses-section">
+                    <h3 class="section-title">📚 Recommended Online Courses</h3>
+                    ${coursesHTML}
+                </div>
+                <div class="upskill-section">
+                    <div class="upskill-title">🚀 Upskilling Recommendation</div>
+                    <p class="upskill-tip">To maximize your career opportunities and stay competitive, consider upskilling in <strong>${data.upskillTip}</strong>. This will help you access higher-paying roles and expand your service offerings.</p>
+                </div>
+            `;
+        }
+
+        function displayNotFound() {
+            const outputBox = document.getElementById('outputBox');
+            outputBox.innerHTML = `
+                <p class="error-message">
+                    ⚠️ Skill not found in database. Please try: tailor, carpenter, electrician, mechanic, plumber, cook, or farmer.
+                </p>
+            `;
+        }
+
+        document.getElementById('skillInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') analyzeSkill();
+        });
+    </script>
+</body>
+</html>
